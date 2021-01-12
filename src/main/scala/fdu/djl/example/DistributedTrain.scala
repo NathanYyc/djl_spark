@@ -17,9 +17,9 @@ import scala.collection.mutable.ArrayBuffer
 object DistributedTrain {
   /**
    * run an all reduced distributed train with the given SparkSession.
-   * Notice that users should define a function that returns {@link Block},
-   * a function returns {@link TrainingConfig} & a function that returns
-   * {@link Shape} because these objects are unserializable.
+   * Notice that users should define a function that returns [[Block]],
+   * a function returns [[TrainingConfig]] & a function that returns
+   * [[Shape]] because these objects are unserializable.
    *
    * @param numEpoch            the number of epochs to train
    * @param trainingDataset     the dataset to train on
@@ -45,6 +45,7 @@ object DistributedTrain {
       val originModel = Model.newInstance("")
       val block = getBlock()
       originModel.setBlock(block)
+
       val config = getConfig()
       val trainer = originModel.newTrainer(config)
       val shape = getShape()
@@ -82,9 +83,9 @@ object DistributedTrain {
     val result = new ArrayBuffer[(Array[Byte], Array[Byte])]
     trainingDataset.getData(trainer.getManager).forEach((batch: Batch) => {
       def foo(batch: Batch) = {
-        val data: Array[Byte] = batch.getData.encode()
+        val data: Array[Byte] = batch.getData.encode
         val label: Array[Byte] = batch.getLabels.encode
-        val tuple: (Array[Byte], Array[Byte]) = new Tuple2[Array[Byte], Array[Byte]](data, label)
+        val tuple: (Array[Byte], Array[Byte]) = (data, label)
         result += tuple
       }
 
@@ -98,9 +99,9 @@ object DistributedTrain {
    *
    * @param trainer        the trainer on which the training will processed
    * @param dataRDD        the parallelized dataset
-   * @param getBlock       a function that returns a new {@link Block} object
-   * @param getConfig      a function that returns a new {@link TrainingConfig} object
-   * @param getShape       a function that returns a new {@link Shape} object
+   * @param getBlock       a function that returns a new [[Block]] object
+   * @param getConfig      a function that returns a new [[TrainingConfig]] object
+   * @param getShape       a function that returns a new [[Shape]] object
    * @param spark          the spark session on which the training work will run
    * @return               encoded parameters & batch numbers
    */
@@ -168,7 +169,7 @@ object DistributedTrain {
   }
 
   /**
-   * encode the {@link ParameterList} to byte Arrays
+   * encode the [[ParameterList]] to byte Arrays
    *
    * @param parameterList the parameter list to be encoded
    * @return              the encoded parameter list
@@ -214,6 +215,9 @@ object DistributedTrain {
         val oldArray = paramList.get(tempMap._1).getArray
         paramList.get(tempMap._1).load(model.getNDManager, dis)
         paramList.get(tempMap._1).setArray(oldArray.add(paramList.get(tempMap._1).getArray))
+
+        dis.close()
+        bis.close()
       }
     }
     paramList.forEach(param => {
